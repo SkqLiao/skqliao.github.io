@@ -1,0 +1,65 @@
+---
+title: "关于我"
+date: 2023-10-08T00:00:00+08:00
+draft: false
+lightgallery: true
+math:
+  enable: true
+---
+
+## 个人简介
+
+北京市人，巨蟹座，INFP。
+
+大四学生，现就读于北京理工大学光电学院，已预推免至北京理工大学前沿交叉科学研究院。
+
+长期参加算法竞赛。中学期间参加NOIP系列赛事，本科期间与[DLee](https://codeforces.com/profile/Durant_Lee)和[vandoor](https://codeforces.com/profile/vandoor)组队[*So Proficient*](https:skqliao.github.io/team-wiki)参加XCPC系列赛事。曾为北京理工大学ACM俱乐部(挂名)主任，现已退休。
+
+研究方向为光学与计算机科学的交叉领域，具体为超分辨显微成像的相关计算方法。
+
+兴趣爱好有编程、阅读（买书）和打羽毛球、游泳等，也包括睡觉和摸鱼。
+
+## 教育经历
+
+* 2014.09-2020.07 [北京市十一学校](https://www.bnds.cn)，**初中,高中**
+* 2020.10-2024.06(预计) [北京理工大学 光电学院](https://opt.bit.edu.cn)，光电信息科学与工程，**本科**
+* 2024.09-2027.06(预计) [北京理工大学 前沿交叉科学研究院](https://arims.bit.edu.cn)，计算机科学与技术，**硕士**
+
+## 研究领域
+
+* 单分子定位超分辨显微成像(SMLM)
+* 人工智能(AI)与机器学习(ML)
+
+## 竞赛经历
+
+{{< style "strong{color:#00b1ff;}" >}}
+
+### 高中
+
+> 实力不济，省选退役~~
+
+* **NOIP 2017/2018** 省一等奖
+* **NOI 冬令营 2019** 铜牌
+
+### 本科
+
+> 什么？你也穿梭在XCPC金银牌的分界线？
+
+* **蓝桥杯 2021 C/C++组** 全国一等奖
+* **蓝桥杯 2023 Python组** 全国一等奖
+* **天梯赛 2021/2022/2023** 个人一等奖
+* **CCPC 2022**：{{< link "https://board.xcpcio.com/ccpc/7th/guilin" 桂林站 "Visit XCPC Board!" >}} 银牌
+* **CCPC 2023**：{{< link "https://board.xcpcio.com/ccpc/8th/weihai" 威海站 "Visit XCPC Board!" >}} 银牌、{{< link "https://board.xcpcio.com/ccpc/8th/final" 总决赛 "Visit XCPC Board!" >}} 铜牌
+* **ICPC 2022**：{{< link "https://board.xcpcio.com/icpc/47th/jinan" 济南站 "Visit XCPC Board!" >}} 银牌、{{< link "https://board.xcpcio.com/icpc/47th/shenyang" 沈阳站 "Visit XCPC Board!" >}} 银牌(3rd)、{{< link href="https://board.xcpcio.com/icpc/46th/ec-final" content="EC Final" title="Visit XCPC Board!" >}} 铜牌
+* **ICPC 2023**：{{< link "https://board.xcpcio.com/icpc/47th/xian" 西安站 "Visit XCPC Board!" >}} 银牌(1st)、{{< link "https://board.xcpcio.com/icpc/47th/hefei" 合肥站 "Visit XCPC Board!" >}} 金牌
+
+{{< admonition type=tip title="预告" open=false >}}
+
+不会吧不会吧，难道一年不训练还能拿奖？
+
+* **CCPC 2024**：{{< link "https://board.xcpcio.com/ccpc/9th/harbin" 哈尔滨站 "Visit XCPC Board!" >}} {金,银,铜,铁}牌
+* **蓝桥杯 2024 ？组** {全国,省}{一,二,三,优,无}等奖
+* **天梯赛 2024** 个人{一,二,三,无}等奖
+
+{{< /admonition >}}
+{{< /style >}}
