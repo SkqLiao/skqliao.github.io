@@ -43,7 +43,7 @@ math:
 
 {{< admonition type=warning title="APIO/CTSC/NOI D呢？" open=false >}}
 
-谢邀，未参加。仅在高二省选退役后选择参加了APIO 2019，不过全程在宾馆娱乐，喜提铁牌。
+谢邀，基本未参加。仅在高二省选退役后选择参加了APIO 2019，不过全程在宾馆娱乐，喜提铁牌。
 
 {{< /admonition >}}
 
@@ -56,7 +56,7 @@ math:
 
 {{< admonition type=warning title="蓝桥杯 2022 呢？" open=false >}}
 
-谢邀，蓝桥杯 2022 C/C++组 省一等奖，由于国赛和期末考试撞车，因而未参加。
+谢邀，蓝桥杯 2022 C/C++组 省一等奖。由于国赛和期末考试的时间撞车，因而未参加。
 
 {{< /admonition >}}
 
