@@ -136,10 +136,10 @@ theme = "FeelIt"
         # Vssue platform API ("bitbucket", "gitea", "gitee", "github", "github-v4", "gitlab")
         # Vssue 平台 API ("bitbucket", "gitea", "gitee", "github", "github-v4", "gitlab")
         platform = "github"
-        owner = "skqliao"
-        repo = "vssue"
+        owner = "SkqLiao"
+        repo = "Vssue"
         clientId = "df793aa20495021add80"
-        clientSecret = "bc051c8e52b85da3ecc05e7c8691b07f4f1c42ba"
+        clientSecret = "f6bb9672420137311d728a9de4d828ae50ebc7dc"
   [params.home]
     [params.home.profile]
       enable = true
