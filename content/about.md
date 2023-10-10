@@ -13,11 +13,26 @@ math:
 
 大四学生，现就读于北京理工大学光电学院，已预推免至北京理工大学前沿交叉科学研究院。
 
-长期参加算法竞赛。中学期间参加 NOIP 系列赛事，本科期间与[DLee](https://codeforces.com/profile/Durant_Lee)和[vandoor](https://codeforces.com/profile/vandoor)组队[_So Proficient_](https:skqliao.github.io/team-wiki)参加 XCPC 系列赛事。曾为北京理工大学 ACM 俱乐部(挂名)主任，现已退休。
-
 研究方向为光学与计算机科学的交叉领域，具体为超分辨显微成像的相关计算方法。
 
+长期参加算法竞赛，自我定位为*比较努力但不够勤奋，有点聪明但不够有智力*型。
+
+{{< admonition type=info title="细说" open=false >}}
+- 中学期间参加 NOIP 系列赛事，最高为北京市20多名，但未进省队
+- 本科期间与[DLee](https://codeforces.com/profile/Durant_Lee)和[vandoor](https://codeforces.com/profile/vandoor)组队[So Proficient](https:skqliao.github.io/team-wiki)参加 XCPC 系列赛事，获得金银铜牌若干
+- 蓝桥杯/天梯赛等简单比赛乱杀，需要脑子的比赛暴毙
+- 曾为BNDSOJ开发者&管理员、北京理工大学 ACM 俱乐部(挂名)主任，现已退休
+{{< /admonition >}}
+
 兴趣爱好有编程、阅读（买书）和打羽毛球、游泳等，也包括睡觉和摸鱼。
+
+{{< admonition type=info title="细说" open=false >}}
+- 买书千余册，读毕者寥寥，尤其喜爱**人文社科**类，喜欢**收集系列**
+- 正在开发自用的**图书管理系统**，基本功能已经完成，但还有若干细节待完善
+- 蛙仰蝶自都会，（以前）日常2'45''配速游2-5km，但是**中关村校区无游泳馆**
+- 羽毛球爱好者，不过基本功不扎实，但是**中关村校区的羽毛球馆好难预定**
+- **多久都睡不醒且没醒多久就会困**的资深患者，时常阴间作息，努力调整中
+{{< /admonition >}}
 
 ## 教育经历
 
