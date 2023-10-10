@@ -180,6 +180,26 @@ theme = "FeelIt"
     # cursor duration after typing finishing (measured in milliseconds, "-1" means unlimited)
     # 打字结束之后光标的持续时间 (单位是毫秒, "-1" 代表无限大)
     duration = -1
+  [params.search]
+    enable = true
+    # 搜索引擎的类型 ("lunr", "algolia")
+    type = "algolia"
+    # 文章内容最长索引长度
+    contentLength = 4000
+    # 搜索框的占位提示语
+    placeholder = ""
+    # FeelIt 新增 | 0.2.1 最大结果数目
+    maxResultLength = 10
+    # FeelIt 新增 | 0.2.3 结果内容片段长度
+    snippetLength = 50
+    # FeelIt 新增 | 0.2.1 搜索结果中高亮部分的 HTML 标签
+    highlightTag = "em"
+    # FeelIt 新增 | 0.2.4 是否在搜索索引中使用基于 baseURL 的绝对路径
+    absoluteURL = false
+    [params.search.algolia]
+      index = "blog-search"
+      appID = "6TD0GJN16H"
+      searchKey = "7de962edc9116ca958879129e00e3b3b"
 
 [menu]
   [[menu.main]]

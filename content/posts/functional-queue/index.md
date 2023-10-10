@@ -1,15 +1,17 @@
 ---
-title: "Simple and efficient purely functional queues and deques"
+title: "简单高效的纯函数式队列实现"
 date: 2023-10-08T12:24:15+08:00
 tags: ["数据结构", "Haskell"]
 categories: ["函数式编程"]
 resources:
+- name: "featured-image"
+  src: "featured-image.png"
 - name: "featured-image-preview"
-  src: "featured-image.webp"
+  src: "featured-image.png"
 lightgallery: true
 ---
 
-纯函数式实现队列（queue）和双端队列（deque），使得单次操作的最坏复杂度为 $O(1)$。
+从经典trick开始，使用lazy list将单次操作的最坏复杂度降为 O(1)。
 
 <!--more-->
 
