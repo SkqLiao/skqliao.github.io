@@ -20,7 +20,7 @@ math:
 {{< admonition type=info title="细说" open=false >}}
 - 中学期间参加 NOIP 系列赛事，最高为北京市20多名，但未进省队
 - 本科期间与[DLee](https://codeforces.com/profile/Durant_Lee)和[vandoor](https://codeforces.com/profile/vandoor)组队[So Proficient](https:skqliao.github.io/team-wiki)参加 XCPC 系列赛事，获得金银铜牌若干
-- 蓝桥杯/天梯赛等简单比赛乱杀，需要脑子的比赛暴毙
+- 蓝桥杯/天梯赛等简单比赛乱杀，需要脑子的比赛XCPC~~暴毙~~靠队友
 - 曾为BNDSOJ开发者&管理员、北京理工大学 ACM 俱乐部(挂名)主任，现已退休
 {{< /admonition >}}
 
