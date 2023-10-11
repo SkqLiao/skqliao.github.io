@@ -4,7 +4,9 @@ date: 2023-10-11T13:49:09+08:00
 draft: false
 ---
 
-众所周知，国内大学绝大部分CS课程的质量实在堪忧，加之于我本科还是光电的……本文将持续更新我自学的CS课程。
+众所周知，国内大学绝大部分CS课程的质量实在堪忧，加之于我本科还是光电的……
+
+本文将持续更新我正在学习的CS课程。
 
 <!--more-->
 
@@ -90,7 +92,7 @@ draft: false
 - **形式**：
   - [ ] 视频
   - [x] 文档
-  - [x] 作业(no grader)
+  - [x] 作业(no grader): {{< link href="/course-on-cuda-programming-on-nvidia-gpus/" content="Mine" >}}
 - **难度**：
 - **标签**：并行计算
 - **语言**：CUDA
@@ -114,7 +116,7 @@ draft: false
 
 {{< admonition type=info title="作业" open=false >}}
 
-- [ ] Practical 1: a trivial "hello world" example
+- [x] Practical 1: a trivial "hello world" example (2023/10/11)
 - [ ] Practical 2: Monte Carlo simulation using NVIDIA's CURAND library for random number generation
 - [ ] Practical 3: 3D Laplace finite difference solver
 - [ ] Practical 4: reduction
