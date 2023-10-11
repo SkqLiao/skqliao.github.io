@@ -83,6 +83,51 @@ draft: false
 - **语言**：
 - **评价**：
 
+## Oxford Course on CUDA Programming on NVIDIA GPUs, 2023
+
+- **主页**：{{< link "https://people.maths.ox.ac.uk/gilesm/cuda/" >}}
+- **内容**：
+- **形式**：
+  - [ ] 视频
+  - [x] 文档
+  - [x] 作业(no grader)
+- **难度**：
+- **标签**：并行计算
+- **语言**：CUDA
+- **评价**：
+
+{{< admonition type=abstract title="课程大纲" open=false >}}
+
+- [x] lecture 1: [An introduction to CUDA](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec1.pdf) (2023/10/11)
+- [x] lecture 2:  [Different memory and variable types](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec2.pdf) (2023/10/11)
+- [ ] lecture 3: [Control flow and synchronisation](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec3.pdf)
+- [ ] lecture 4: [Warp shuffles, and reduction / scan operations](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec4.pdf)
+- [ ] lecture 5: [Libraries and tools](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec5_wes.pdf)
+- [ ] lecture 6: [Multiple GPUs, and odds and ends](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec6_wes.pdf)
+- [ ] lecture 7:  [Tackling a new CUDA application](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec7.pdf)
+- [ ] lecture 8: [OP2 "Library" for Unstructured Grids](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec8.pdf) research talk (MG)
+- [ ] lecture 9: [AstroAccelerate](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec9_wes.pdf) research talk (WA)
+- [ ] lecture 10: (https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec10_wes.pdf)
+- [ ] extra research talk: [Use of GPUs for Explicit and Implicit Finite Difference Methods](https://people.maths.ox.ac.uk/gilesm/talks/QuanTech_16.pdf)
+
+{{< /admonition >}}
+
+{{< admonition type=info title="作业" open=false >}}
+
+- [ ] Practical 1: a trivial "hello world" example
+- [ ] Practical 2: Monte Carlo simulation using NVIDIA's CURAND library for random number generation
+- [ ] Practical 3: 3D Laplace finite difference solver
+- [ ] Practical 4: reduction
+- [ ] Practical 5: using the CUBLAS and CUFFT libraries
+- [ ] Practical 6: revisiting the simple "hello world" example
+- [ ] Practical 7: tri-diagonal equations
+- [ ] Practical 8: scan operation and recurrence equations
+- [ ] Practical 9: pattern matching
+- [ ] Practical 10: auto-tuning
+- [ ] Practical 11: streams and OpenMP multithreading
+- [ ] Practical 12: more on streams and overlapping computation and communication
+
+{{< /admonition >}}
 ## MIT 6.854/18.415J: Advanced Algorithms (Fall 2021)
 - **主页**：{{< link "https://6.5210.csail.mit.edu" >}}
 - **内容**：
