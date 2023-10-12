@@ -351,6 +351,7 @@ int main(int argc, const char **argv) {
 
 每个元素的值是上次的两倍，说明正确的进行了求和。
 
+这份代码考虑的情况比较简单，更加完整的实现可以参考官方的示例代码[vectorAdd.cu](https://github.com/NVIDIA/cuda-samples/blob/master/Samples/0_Introduction/vectorAdd/vectorAdd.cu)。
 
 {{< admonition type=info title="prac1c.cu" open=false >}}
 ```cuda

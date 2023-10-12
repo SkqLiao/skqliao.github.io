@@ -92,7 +92,7 @@ draft: false
 - **形式**：
   - [ ] 视频
   - [x] 文档
-  - [x] 作业(no grader): {{< link href="/course-on-cuda-programming-on-nvidia-gpus/" content="Mine" >}}
+  - [x] 作业(no grader): {{< link href="/course-on-cuda-programming-on-nvidia-gpus/" content="my sol" >}}
 - **难度**：
 - **标签**：并行计算
 - **语言**：CUDA
@@ -102,7 +102,7 @@ draft: false
 
 - [x] lecture 1: [An introduction to CUDA](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec1.pdf) (2023/10/11)
 - [x] lecture 2:  [Different memory and variable types](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec2.pdf) (2023/10/11)
-- [ ] lecture 3: [Control flow and synchronisation](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec3.pdf)
+- [ ] lecture 3: [Control flow and synchronisation](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec3.pdf) (2023/10/12)
 - [ ] lecture 4: [Warp shuffles, and reduction / scan operations](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec4.pdf)
 - [ ] lecture 5: [Libraries and tools](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec5_wes.pdf)
 - [ ] lecture 6: [Multiple GPUs, and odds and ends](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec6_wes.pdf)
@@ -130,6 +130,33 @@ draft: false
 - [ ] Practical 12: more on streams and overlapping computation and communication
 
 {{< /admonition >}}
+
+{{< admonition type=note title="补充材料" open=false >}}
+{{<link href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html" content="NVIDIA CUDA C Programming Guide" >}}
+- [ ] 1. Introduction
+- [ ] 2. Programming Model
+- [ ] 3. Programming Interface
+- [ ] 4. Hardware Implementation
+- [ ] 5. Performance Guidelines
+- [ ] 6. CUDA-Enabled GPUs
+- [ ] 7. C++ Language Extensions
+- [ ] 8. Cooperative Groups
+- [ ] 9. CUDA Dynamic Parallelism
+- [ ] 10. Virtual Memory Management
+- [ ] 11. Stream Ordered Memory Allocator
+- [ ] 12. Graph Memory Nodes
+- [ ] 13. Mathematical Functions
+- [ ] 14. C++ Language Support
+- [ ] 15. Texture Fetching
+- [ ] 16. Compute Capabilities
+- [ ] 17. Driver API
+- [ ] 18. CUDA Environment Variables
+- [ ] 19. Unified Memory Programming
+- [ ] 20. Lazy Loading
+- [ ] 21. Notices
+{{< /admonition >}}
+
+
 ## MIT 6.854/18.415J: Advanced Algorithms (Fall 2021)
 - **主页**：{{< link "https://6.5210.csail.mit.edu" >}}
 - **内容**：
