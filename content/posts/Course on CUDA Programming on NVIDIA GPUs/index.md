@@ -1,7 +1,15 @@
 ---
-title: "Oxford: Course on CUDA Programming on NVIDIA GPUs Practice"
+title: "Oxford: Course on CUDA Programming on NVIDIA GPUs 学习笔记"
 date: 2023-10-11T20:15:04+08:00
 draft: false
+tags: ["CUDA"]
+categories: ["学习笔记"]
+resources:
+- name: "featured-image"
+  src: "cuda.png"
+- name: "featured-image-preview"
+  src: "cuda.png"
+lightgallery: true
 ---
 
 记录本课程的所有practice。
@@ -428,3 +436,25 @@ int main(int argc, const char **argv) {
 相比于`cudaMalloc`，`cudaMallocManaged`更加智能，不再需要显式的拷贝，简化了代码的编写。
 
 特别需要注意的是，虽然不再需要`cudaMemcpy`，但是在执行`printf`前，需要使用`cudaDeviceSynchronize`函数，用于等待GPU全部线程执行完毕。
+
+## Lecture 4
+
+如何通过并行计算求前缀和？
+
+### 方法1：$\log{n}$ 轮，每轮 $O(n)$
+
+{{< admonition type=info title="prefixSum1.cu" open=false >}}
+```cuda
+__global__ void sum(float *f) {
+  extern __shared__ float tmp[];
+  int tid = threadIdx.x;
+  tmp[tid] = f[tid + blockIdx.x * blockDim.x];
+  for (int d = 1; d < blockDim.x; d *= 2) {
+    __syncthreads();
+    float t = (tid >= d) ? tmp[tid - d] : 0;
+    __syncthreads();
+    tmp[tid] += t;
+  }
+}
+```
+{{< /admonition >}}
