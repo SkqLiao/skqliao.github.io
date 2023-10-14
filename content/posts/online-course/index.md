@@ -129,7 +129,7 @@ lightgallery: true
 {{< admonition type=info title="作业" open=false >}}
 
 - [x] Practical 1: a trivial "hello world" example (2023/10/11)
-- [ ] Practical 2: Monte Carlo simulation using NVIDIA's CURAND library for random number generation
+- [x] Practical 2: Monte Carlo simulation using NVIDIA's CURAND library for random number generation (2023/10/14)
 - [ ] Practical 3: 3D Laplace finite difference solver
 - [ ] Practical 4: reduction
 - [ ] Practical 5: using the CUBLAS and CUFFT libraries
