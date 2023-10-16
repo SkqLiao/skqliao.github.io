@@ -1,5 +1,5 @@
 ---
-title: 图书管理系统的开发过程(持续更新)
+title: 图书管理系统的开发过程(持续施工中)
 date: 2023-10-10T15:12:48+08:00
 draft: false
 tags: ["Vue3", "TypeScript"]
@@ -38,7 +38,9 @@ resources:
 
 ### 功能
 
-{{< admonition type=bug title="V1由于离谱的原因(见下一节)，现已废弃" open=false >}}
+{{< admonition type=bug title="V1现已废弃" open=false >}}
+详情见下一节
+{{< /admonition >}}
 
 - 主页面，右侧图书每页12本，按照购买时间进行降序排序，左侧为五个主要功能的按钮。（图片已丢失）
 
@@ -72,7 +74,7 @@ resources:
 
 {{< image src="https://raw.githubusercontent.com/SkqLiiiao/image/main/3d0a39b8a0e96a54b260ff0284bb44d8.png" caption="阅读日历" >}}
 
-{{< /admonition >}}
+
 ### 结局
 
 为了方便，我选择使用docker配置相关环境并进行开发(dnmp)，且没有使用git(容器里没有)。好不容易导入完所有数据，结果在某次重新安装Ubuntu(双系统)的时候，不小心将整个硬盘格式化了。。于是乎，图书管理系统V1暴毙，享年2个月。
