@@ -130,10 +130,10 @@ lightgallery: true
 
 - [x] Practical 1: a trivial "hello world" example (2023/10/11)
 - [x] Practical 2: Monte Carlo simulation using NVIDIA's CURAND library for random number generation (2023/10/14)
-- [ ] Practical 3: 3D Laplace finite difference solver
-- [ ] Practical 4: reduction
-- [ ] Practical 5: using the CUBLAS and CUFFT libraries
-- [ ] Practical 6: revisiting the simple "hello world" example
+- [x] Practical 3: 3D Laplace finite difference solver (2023/10/16)
+- [x] Practical 4: reduction (2023/10/16)
+- [x] Practical 5: using the CUBLAS and CUFFT libraries (2023/10/16)
+- [x] Practical 6: revisiting the simple "hello world" example (2023/10/16)
 - [ ] Practical 7: tri-diagonal equations
 - [ ] Practical 8: scan operation and recurrence equations
 - [ ] Practical 9: pattern matching
