@@ -12,9 +12,7 @@ resources:
 lightgallery: true
 ---
 
-记录本课程的所有practice。
-
-目前进度6/12。
+记录本课程的所有实践，目前进度6/12。
 
 <!--more-->
 

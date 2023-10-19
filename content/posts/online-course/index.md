@@ -104,7 +104,7 @@ lightgallery: true
   - [ ] 视频
   - [x] 文档
   - [x] 作业(no grader): {{< link href="/course-on-cuda-programming-on-nvidia-gpus/" content="my sol" >}}
-  - [ ] 资料：{{<link href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html" content="NVIDIA CUDA C Programming Guide" >}}
+  - [x] 资料：{{<link href="https://docs.nvidia.com/cuda/cuda-c-programming-guide/contents.html" content="NVIDIA CUDA C Programming Guide" >}}
 - **难度**：
 - **标签**：并行计算
 - **语言**：CUDA
@@ -118,11 +118,11 @@ lightgallery: true
 - [x] lecture 4: [Warp shuffles, and reduction / scan operations](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec4.pdf) (2023/10/12)
 - [x] lecture 5: [Libraries and tools](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec5_wes.pdf) (2023/10/13)
 - [x] lecture 6: [Multiple GPUs, and odds and ends](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec6_wes.pdf) (2023/10/13)
-- [ ] lecture 7: [Tackling a new CUDA application](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec7.pdf)
-- [ ] lecture 8: [OP2 "Library" for Unstructured Grids](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec8.pdf) research talk (MG)
-- [ ] lecture 9: [AstroAccelerate](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec9_wes.pdf) research talk (WA)
-- [ ] lecture 10: (https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec10_wes.pdf)
-- [ ] extra research talk: [Use of GPUs for Explicit and Implicit Finite Difference Methods](https://people.maths.ox.ac.uk/gilesm/talks/QuanTech_16.pdf)
+- [x] lecture 7: [Tackling a new CUDA application](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec7.pdf) (2023/10/18)
+- [x] lecture 8: [OP2 "Library" for Unstructured Grids](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec8.pdf) research talk (MG) (2023/10/18)
+- [x] lecture 9: [AstroAccelerate](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec9_wes.pdf) research talk (WA) (2023/10/18)
+- [x] lecture 10: [Future Directions](https://people.maths.ox.ac.uk/gilesm/cuda/lecs/lec10_wes.pdf) (2023/10/18)
+- [x] extra research talk: [Use of GPUs for Explicit and Implicit Finite Difference Methods](https://people.maths.ox.ac.uk/gilesm/talks/QuanTech_16.pdf) (2023/10/18)
 
 {{< /admonition >}}
 
