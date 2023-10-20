@@ -12,7 +12,7 @@ resources:
 lightgallery: true
 ---
 
-记录本课程的所有实践，目前进度6/12。
+记录本课程的所有实践，目前进度7/12。
 
 <!--more-->
 
@@ -3063,3 +3063,799 @@ clean:
 
 更多关于`nvcc`编译器的内容见文档：{{<link "http://docs.nvidia.com/cuda/pdf/CUDA Compiler Driver NVCC.pdf">}}
 
+## Practical 7: solving tridiagonal equations
+
+{{< admonition type=tips title="运行环境" open=false >}}
+本次实践的运行环境为：
+- GPU：RTX 3080(10GB)
+- CPU：12 vCPU Intel(R) Xeon(R) Platinum 8255C CPU @ 2.50GHz
+{{< /admonition >}}
+
+{{< admonition type=quote title="摘要" open=true >}}
+第 7 讲介绍了求解三对角方程的 PCR（parallel cyclic reduction）算法。
+{{< /admonition >}}
+
+### Subtask 1
+
+求解方程：
+$$
+Ax^{n+1}=\lambda x^n
+$$
+
+其中 $A$ 是三对角矩阵，主对角线上为 $2 + \lambda$，相邻的两条对角线上为 $-1$。
+
+先看CPU版代码，使用追赶法求解，其实就是个高斯消元。详解可以参考博客{{<link "https://blog.csdn.net/jclian91/article/details/80251244" "三对角线性方程组(tridiagonal systems of equations)的求解">}}。
+
+{{< admonition type=info title="trid_gold.cpp" open=false >}}
+```cpp
+void gold_trid(int NX, int niter, float* u, float* c)
+{
+  float lambda=1.0f, aa, bb, cc, dd;
+
+  for (int iter=0; iter<niter; iter++) {
+
+    //
+    // forward pass
+    //
+
+    aa   = -1.0f;
+    bb   =  2.0f + lambda;
+    cc   = -1.0f;
+    dd   = lambda*u[0];
+
+    bb   = 1.0f / bb;
+    cc   = bb*cc;
+    dd   = bb*dd;
+    c[0] = cc;
+    u[0] = dd;
+
+    for (int i=1; i<NX; i++) {
+      aa   = -1.0f;
+      bb   = 2.0f + lambda - aa*cc;
+      dd   = lambda*u[i] - aa*dd;
+      bb   = 1.0f/bb;
+      cc   = -bb;
+      dd   = bb*dd;
+      c[i] = cc;
+      u[i] = dd;
+    }
+
+    //
+    // reverse pass
+    //
+
+    u[NX-1] = dd;
+
+    for (int i=NX-2; i>=0; i--) {
+      dd   = u[i] - c[i]*dd;
+      u[i] = dd;
+    }
+  }
+}
+```
+{{< /admonition >}}
+
+接下来看CUDA代码，通过Parallel Cyclic Reduction (PCR)方法实现并行。
+
+{{< admonition type=info title="trid.cu" open=false >}}
+```c
+//
+// Program to perform Backward Euler time-marching on a 1D grid
+//
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "helper_cuda.h"
+
+////////////////////////////////////////////////////////////////////////
+// include kernel function
+////////////////////////////////////////////////////////////////////////
+
+#include "trid_kernel.h"
+
+////////////////////////////////////////////////////////////////////////
+// declare Gold routine
+////////////////////////////////////////////////////////////////////////
+
+void gold_trid(int, int, float *, float *);
+
+////////////////////////////////////////////////////////////////////////
+// Main program
+////////////////////////////////////////////////////////////////////////
+
+int main(int argc, const char **argv) {
+  int NX = 128, niter = 2;
+
+  float *h_u, *h_v, *h_c, *d_u;
+
+  // initialise card
+
+  findCudaDevice(argc, argv);
+
+  // allocate memory on host and device
+
+  h_u = (float *)malloc(sizeof(float) * NX);
+  h_v = (float *)malloc(sizeof(float) * NX);
+  h_c = (float *)malloc(sizeof(float) * NX);
+
+  checkCudaErrors(cudaMalloc((void **)&d_u, sizeof(float) * NX));
+
+  // GPU execution
+
+  for (int i = 0; i < NX; i++) h_u[i] = 1.0f;
+
+  checkCudaErrors(
+      cudaMemcpy(d_u, h_u, sizeof(float) * NX, cudaMemcpyHostToDevice));
+
+  GPU_trid<<<1, NX>>>(NX, niter, d_u);
+
+  checkCudaErrors(
+      cudaMemcpy(h_u, d_u, sizeof(float) * NX, cudaMemcpyDeviceToHost));
+
+  // CPU execution
+
+  for (int i = 0; i < NX; i++) h_v[i] = 1.0f;
+
+  gold_trid(NX, niter, h_v, h_c);
+
+  // print out array
+
+  for (int i = 0; i < NX; i++) {
+    printf(" %d  %f  %f  %f \n", i, h_u[i], h_v[i], h_u[i] - h_v[i]);
+  }
+
+  // Release GPU and CPU memory
+
+  checkCudaErrors(cudaFree(d_u));
+
+  free(h_u);
+  free(h_v);
+  free(h_c);
+}
+```
+{{< /admonition >}}
+
+{{< admonition type=info title="trid_kernel.h" open=false >}}
+```c
+
+__global__ void GPU_trid(int NX, int niter, float *u)
+{
+  __shared__  float a[128], c[128], d[128];
+
+  float aa, bb, cc, dd, bbi, lambda=1.0;
+  int   tid;
+
+  for (int iter=0; iter<niter; iter++) {
+
+    // set tridiagonal coefficients and r.h.s.
+
+    tid = threadIdx.x;
+    bbi = 1.0f / (2.0f + lambda);
+    
+    if (tid>0)
+      aa = -bbi;
+    else
+      aa = 0.0f;
+
+    if (tid<blockDim.x-1)
+      cc = -bbi;
+    else
+      cc = 0.0f;
+
+    if (iter==0) 
+      dd = lambda*u[tid]*bbi;
+    else
+      dd = lambda*dd*bbi;
+
+    a[tid] = aa;
+    c[tid] = cc;
+    d[tid] = dd;
+
+    // forward pass
+
+    for (int nt=1; nt<NX; nt=2*nt) {
+      __syncthreads();  // finish writes before reads
+
+      bb = 1.0f;
+
+      if (tid-nt >= 0) {
+        dd = dd - aa*d[tid-nt];
+        bb = bb - aa*c[tid-nt];
+        aa =    - aa*a[tid-nt];
+      }
+
+      if (tid+nt < NX) {
+        dd = dd - cc*d[tid+nt];
+        bb = bb - cc*a[tid+nt];
+        cc =    - cc*c[tid+nt];
+      }
+
+      __syncthreads();  // finish reads before writes
+
+
+      bbi = 1.0f / bb;
+      aa  = aa*bbi;
+      cc  = cc*bbi;
+      dd  = dd*bbi;
+
+      a[tid] = aa;
+      c[tid] = cc;
+      d[tid] = dd;
+    }
+  }
+
+  u[tid] = dd;
+}
+```
+{{< /admonition >}}
+
+手推一下式子就能看懂代码。
+
+原式：$a_nx_{n-1}+b_nx_n+c_nx_{n+1}=d_n(0\leq n\leq N-1)$，其中 $b_n=\lambda+2,a_n=c_n=-2$。
+
+先进行归一化，令 $a_n^{\*}=\frac{a_n}{b_n},c_n^{\*}=\frac{c_n}{b_n},d_n^{\*}=\frac{d_n}{b_n}$，则原式化为 $a_n^{\*}x_{n-1}+x_n+c_n^{\*}x_{n+1}=d_n^{\*}$。
+
+列出前后两个式子$a_{n-1}^{\*}x_{n-2}+x_{n-1}+c_{n-1}^{\*}x_{n}=d_{n-1}^{\*}$和$a_{n+1}^{\*}x_{n}+x_{n+1}+c_{n+1}^{\*}x_{n+2}=d_{n+1}^{\*}$，我们可以消掉 $x_{n-1}$ 和 $x_{n+1}$ 这两项。
+
+经过简单的加减法，得到 $(-a_{n-1}^{\*}a_n^{\*})x_{n-2}+(1-c_{n-1}^{\*}a_n^{\*}-a_{n-1}^{\*}c_n^{*})x_n+(-c_{n+1}^{\*}c_n^{\*})x_{n+2}=d_n^{\*}-c_n^{\*}d_{n+1}^{\*}-a_n^{\}d_{n-1}^{\*}$。
+
+对上式做归一化，然后重复该流程，则可以得到 $x_n$ 与 $x_{n-4},x_{n+4}$ 的式子，以此类推，直到下标超出边界。
+
+多线程并行处理 $x_n$，则迭代 $\lceil\log_2{n}\rceil$ 轮即可完成。
+
+### Subtask 2
+
+下一步是不再固定线程数，这意味着需要申请共享内存。方法其实与`practical 4` 类似，唯一的区别在于，由于有3个数组，所以需要手动分配它们的首地址。
+
+```c
+  int shared_mem_size = sizeof(float) * NX * 3;
+  GPU_trid<<<1, NX, shared_mem_size>>>(NX, niter, d_u);
+```
+
+{{< admonition type=info title="trid_kernel2.h" open=false >}}
+```c
+__global__ void GPU_trid(int NX, int niter, float *u)
+{
+  extern __shared__ float s[];
+
+  float *a = s;
+  float *c = s + NX;
+  float *d = c + NX;
+
+  float aa, bb, cc, dd, bbi, lambda=1.0;
+  int   tid;
+
+  for (int iter=0; iter<niter; iter++) {
+
+    // set tridiagonal coefficients and r.h.s.
+
+    tid = threadIdx.x;
+    bbi = 1.0f / (2.0f + lambda);
+    
+    if (tid>0)
+      aa = -bbi;
+    else
+      aa = 0.0f;
+
+    if (tid<blockDim.x-1)
+      cc = -bbi;
+    else
+      cc = 0.0f;
+
+    if (iter==0) 
+      dd = lambda*u[tid]*bbi;
+    else
+      dd = lambda*dd*bbi;
+
+    a[tid] = aa;
+    c[tid] = cc;
+    d[tid] = dd;
+
+    // forward pass
+
+    for (int nt=1; nt<NX; nt=2*nt) {
+      __syncthreads();  // finish writes before reads
+
+      bb = 1.0f;
+
+      if (tid-nt >= 0) {
+        dd = dd - aa*d[tid-nt];
+        bb = bb - aa*c[tid-nt];
+        aa =    - aa*a[tid-nt];
+      }
+
+      if (tid+nt < NX) {
+        dd = dd - cc*d[tid+nt];
+        bb = bb - cc*a[tid+nt];
+        cc =    - cc*c[tid+nt];
+      }
+
+      __syncthreads();  // finish reads before writes
+
+
+      bbi = 1.0f / bb;
+      aa  = aa*bbi;
+      cc  = cc*bbi;
+      dd  = dd*bbi;
+
+      a[tid] = aa;
+      c[tid] = cc;
+      d[tid] = dd;
+    }
+  }
+
+  u[tid] = dd;
+}
+```
+{{< /admonition >}}
+
+接下来是并行运行M个block来求解M个独立的方程。感觉这个没啥区别，就是把传入的数组空间开到M倍，然后每个block独立跑就行。由于检验正确性还需要改CPU版代码，就懒得写了。
+
+Implicit解法，参考作者的{{<link "https://people.maths.ox.ac.uk/gilesm/files/WHPCF14.pdf" "论文">}}和{{<link "https://people.maths.ox.ac.uk/gilesm/codes/BS_1D/" "源代码">}}。
+
+最后是假设`NS=32`，使用shuffle instructions来取代shared memory。
+
+{{< admonition type=info title="trid_kernel3.h" open=false >}}
+```c
+__global__ void GPU_trid(int NX, int niter, float *u) {
+  float aa, bb, cc, dd, bbi, lambda = 1.0;
+  int tid;
+
+  for (int iter = 0; iter < niter; iter++) {
+    // set tridiagonal coefficients and r.h.s.
+
+    tid = threadIdx.x;
+    bbi = 1.0f / (2.0f + lambda);
+
+    if (tid > 0)
+      aa = -bbi;
+    else
+      aa = 0.0f;
+
+    if (tid < blockDim.x - 1)
+      cc = -bbi;
+    else
+      cc = 0.0f;
+
+    if (iter == 0)
+      dd = lambda * u[tid] * bbi;
+    else
+      dd = lambda * dd * bbi;
+
+    // forward pass
+    for (int s = 1; s < 32; s *= 2) {
+      bb = 1.0f / (1.0f - aa * __shfl_up_sync(0xffffffff, cc, s) -
+                   cc * __shfl_down_sync(0xffffffff, aa, s));
+      dd = (dd - aa * __shfl_up_sync(0xffffffff, dd, s) -
+            cc * __shfl_down_sync(0xffffffff, dd, s)) *
+           bb;
+      aa = -aa * __shfl_up_sync(0xffffffff, aa, s) * bb;
+      cc = -cc * __shfl_down_sync(0xffffffff, cc, s) * bb;
+    }
+  }
+
+  u[tid] = dd;
+}
+```
+{{< /admonition >}}
+
+## Practical 8: scan operation and recurrence equations
+
+{{< admonition type=tips title="运行环境" open=false >}}
+本次实践的运行环境为：
+- GPU：RTX 3080(10GB)
+- CPU：12 vCPU Intel(R) Xeon(R) Platinum 8255C CPU @ 2.50GHz
+{{< /admonition >}}
+
+{{< admonition type=quote title="摘要" open=true >}}
+第 4 讲解释了如何执行扫描操作，还概述了如何扩展实现以求解长递归方程。本实用程序首先提供了单线程块的扫描例程实现。然后，你将把它扩展到多线程块，以及长递推方程的并行求解。
+{{< /admonition >}}
+
+{{< admonition type=quote title="Step 1" open=true >}}
+Make and run the application scan.
+
+This performs an addition scan operation using a single thread block, reading in the input data from device memory, and putting the output (which is the sum of the preceding input elements) back into device memory.
+
+Read through the code and understand what it is doing.
+{{< /admonition >}}
+
+{{< admonition type=info title="scan.cu" open=false >}}
+```c
+#include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "helper_cuda.h"
+
+///////////////////////////////////////////////////////////////////////////////
+// CPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+void scan_gold(float *odata, float *idata, const unsigned int len) {
+  odata[0] = 0;
+  for (int i = 1; i < len; i++) odata[i] = idata[i - 1] + odata[i - 1];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+__global__ void scan(float *g_odata, float *g_idata) {
+  // Dynamically allocated shared memory for scan kernels
+
+  extern __shared__ float tmp[];
+
+  float temp;
+  int tid = threadIdx.x;
+
+  // read input into shared memory
+
+  temp = g_idata[tid];
+  tmp[tid] = temp;
+
+  // scan up the tree
+
+  for (int d = 1; d < blockDim.x; d = 2 * d) {
+    __syncthreads();
+
+    if (tid - d >= 0) temp = temp + tmp[tid - d];
+
+    __syncthreads();
+
+    tmp[tid] = temp;
+  }
+
+  // write results to global memory
+
+  __syncthreads();
+
+  if (tid == 0)
+    temp = 0.0f;
+  else
+    temp = tmp[tid - 1];
+
+  g_odata[tid] = temp;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Program main
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, const char **argv) {
+  int num_elements, mem_size, shared_mem_size;
+
+  float *h_data, *reference;
+  float *d_idata, *d_odata;
+
+  // initialise card
+
+  findCudaDevice(argc, argv);
+
+  num_elements = 512;
+  mem_size = sizeof(float) * num_elements;
+
+  // allocate host memory to store the input data
+  // and initialize to integer values between 0 and 1000
+
+  h_data = (float *)malloc(mem_size);
+
+  for (int i = 0; i < num_elements; i++)
+    h_data[i] = floorf(1000 * (rand() / (float)RAND_MAX));
+
+  // compute reference solution
+
+  reference = (float *)malloc(mem_size);
+  scan_gold(reference, h_data, num_elements);
+
+  // allocate device memory input and output arrays
+
+  checkCudaErrors(cudaMalloc((void **)&d_idata, mem_size));
+  checkCudaErrors(cudaMalloc((void **)&d_odata, mem_size));
+
+  // copy host memory to device input array
+
+  checkCudaErrors(
+      cudaMemcpy(d_idata, h_data, mem_size, cudaMemcpyHostToDevice));
+
+  // execute the kernel
+
+  shared_mem_size = sizeof(float) * (num_elements + 1);
+  scan<<<1, num_elements, shared_mem_size>>>(d_odata, d_idata);
+  getLastCudaError("scan kernel execution failed");
+
+  // copy result from device to host
+
+  checkCudaErrors(
+      cudaMemcpy(h_data, d_odata, mem_size, cudaMemcpyDeviceToHost));
+
+  // check results
+
+  float err = 0.0;
+  for (int i = 0; i < num_elements; i++) {
+    err += (h_data[i] - reference[i]) * (h_data[i] - reference[i]);
+    //    printf(" %f %f \n",h_data[i], reference[i]);
+  }
+  printf("rms scan error  = %f\n", sqrt(err / num_elements));
+
+  // cleanup memory
+
+  free(h_data);
+  free(reference);
+  checkCudaErrors(cudaFree(d_idata));
+  checkCudaErrors(cudaFree(d_odata));
+
+  // CUDA exit -- needed to flush printf write buffer
+
+  cudaDeviceReset();
+}
+```
+{{< /admonition >}}
+
+`scan.cu` 是并行求前缀和的代码，通过共享一个全局的数组，倍增求解，操作次数为为 $O(n\log{n})$ 次。
+
+这是最简单的版本，因为只有一个block，每个thread处理一个下标。
+
+{{< admonition type=quote title="Step 2" open=true >}}
+Extend the implementation to multiple thread blocks using either of the approaches described in the lecture. If you have time, perhaps you can do both and compare the execution times.
+{{< /admonition >}}
+
+那如果数组长度很大呢？那就需要多个block了，这个时候还需要涉及到块之间的数据传输问题。
+
+必须要吐槽一下，明明随机了 `num_elements` 个数，但实际上最后一个数根本没参与求和，因为要给 $0$ 留第一个位置。
+
+{{< admonition type=info title="scan2.cu" open=false >}}
+```c
+__device__ volatile int current_block = 0;
+__device__ volatile float current_sum = 0.0f;
+
+__global__ void scan(int N, float *g_odata, float *g_idata) {
+  // Dynamically allocated shared memory for scan kernels
+
+  extern __shared__ float tmp[];
+
+  float temp;
+  int tid = threadIdx.x;
+  int rid = tid + blockDim.x * blockIdx.x;
+
+  if (rid >= N) return;
+  // read input into shared memory
+
+  temp = g_idata[rid];
+  tmp[tid] = temp;
+
+  // scan up the tree
+
+  for (int d = 1; d < blockDim.x; d = 2 * d) {
+    __syncthreads();
+
+    if (tid - d >= 0) temp = temp + tmp[tid - d];
+
+    __syncthreads();
+
+    tmp[tid] = temp;
+  }
+
+  // write results to global memory
+
+  __syncthreads();
+
+  temp = tmp[tid];
+
+  __syncthreads();
+
+  do {
+  } while (current_block < blockIdx.x);
+  temp += current_sum;
+  __threadfence();
+  if (tid == blockDim.x - 1) {
+    current_sum += tmp[blockDim.x - 1];
+    current_block++;
+  }
+
+  if (rid < N) g_odata[rid + 1] = temp;
+}
+```
+{{< /admonition >}}
+
+在新代码中，需要维护当前“前缀块”的元素和，这个只能等每个块内求完前缀和后，从前往后串行计算。因此维护了全局变量：当前的前缀块和`current_sum`、当前更新完`current_sum`的块id`current_block`。
+
+当每个块内部求完前缀和后，等待`current_block`增加到`blockIdx.x`，此时每个位置的元素增加`current_sum`即可得到真正的前缀和，最后再把当前块的元素和累加进`current_sum`，`current_block++`，下一个块就可以继续计算。
+
+{{< admonition type=quote title="Step 3" open=true >}}
+Modify your code to use shuffles instead for the scan within each block.
+{{< /admonition >}}
+
+`lecture 4`里面也详细介绍了做法。
+
+具体来说，先在warp中求前缀和，然后再对block中的所有warp做前缀和（1024个线程，至多32个warp，正好可以再来一次shuffle instruction）。
+
+剩下的部分就和前面相同了，因为此时已经得到了当前block的前缀和，需要在block之间串行计算。
+
+{{< admonition type=info title="scan3.cu" open=false >}}
+```c
+#include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <csignal>
+
+#include "helper_cuda.h"
+
+///////////////////////////////////////////////////////////////////////////////
+// CPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+void scan_gold(double *odata, double *idata, const unsigned int len) {
+  odata[0] = 0;
+  for (int i = 1; i < len; i++) odata[i] = idata[i - 1] + odata[i - 1];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+__device__ volatile int current_block = 0;
+__device__ volatile double current_sum = 0.0f;
+
+__global__ void scan(int N, double *g_odata, double *g_idata) {
+  // Dynamically allocated shared memory for scan kernels
+
+  extern __shared__ double tmp[];
+
+  int tid = threadIdx.x;
+  int rid = tid + blockDim.x * blockIdx.x;
+  int laneId = tid % warpSize;
+  int warpId = tid / warpSize;
+
+  if (rid >= N) return;
+  // read input into shared memory
+
+  double temp = g_idata[rid];
+
+  // scan up the tree
+
+  for (int d = 1; d < 32; d = 2 * d) {
+    __syncthreads();
+
+    double t = __shfl_up_sync(0xffffffff, temp, d);
+
+    if (laneId - d >= 0) {
+      temp += t;
+    }
+  }
+
+  __syncthreads();
+
+  if (laneId == 31) {
+    tmp[warpId] = temp;
+  }
+
+  __syncthreads();
+
+  if (warpId == 0) {
+    double tt = tmp[tid], t;
+    for (int d = 1; d < 32; d = 2 * d) {
+      t = __shfl_up_sync(0xffffffff, tt, d);
+
+      if (laneId >= d) tt += t;
+    }
+    tmp[tid] = tt;
+  }
+  __syncthreads();
+
+  if (warpId > 0) temp += tmp[warpId - 1];
+  __syncthreads();
+  do {
+  } while (current_block < blockIdx.x);
+  temp += current_sum;
+  __syncthreads();
+  if (tid == blockDim.x - 1) {
+    current_sum = temp;
+    current_block++;
+  }
+  if (rid < N) g_odata[rid + 1] = temp;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Program main
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, const char **argv) {
+  int num_elements, num_threads, num_blocks, mem_size, shared_mem_size;
+
+  double *h_data, *reference;
+  double *d_idata, *d_odata;
+
+  // initialise card
+
+  findCudaDevice(argc, argv);
+
+  num_elements = 100000000;
+  num_threads = 1024;
+  num_blocks = (num_elements + num_threads - 1) / num_threads;
+  mem_size = sizeof(double) * num_elements;
+
+  // allocate host memory to store the input data
+  // and initialize to integer values between 0 and 1000
+
+  h_data = (double *)malloc(mem_size);
+
+  for (int i = 0; i < num_elements; i++)
+    h_data[i] = floorf(1000 * (rand() / (double)RAND_MAX));
+
+  // compute reference solution
+
+  reference = (double *)malloc(mem_size);
+  scan_gold(reference, h_data, num_elements);
+
+  // allocate device memory input and output arrays
+
+  checkCudaErrors(cudaMalloc((void **)&d_idata, mem_size));
+  checkCudaErrors(cudaMalloc((void **)&d_odata, mem_size));
+
+  // copy host memory to device input array
+
+  checkCudaErrors(
+      cudaMemcpy(d_idata, h_data, mem_size, cudaMemcpyHostToDevice));
+
+  // execute the kernel
+
+  shared_mem_size = sizeof(double) * 32;
+
+  float milli;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start);
+  scan<<<num_blocks, num_threads, shared_mem_size>>>(num_elements, d_odata,
+                                                     d_idata);
+
+  cudaEventRecord(stop);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&milli, start, stop);
+  printf("\nscan3: %.1f (ms) \n", milli);
+
+  getLastCudaError("scan kernel execution failed");
+
+  // copy result from device to host
+
+  checkCudaErrors(
+      cudaMemcpy(h_data, d_odata, mem_size, cudaMemcpyDeviceToHost));
+
+  // check results
+
+  double err = 0.0;
+  for (int i = 0; i < num_elements; i++) {
+    err += (h_data[i] - reference[i]) * (h_data[i] - reference[i]);
+    // printf("%d %f %f \n", i, h_data[i], reference[i]);
+  }
+  printf("rms scan error  = %f\n", sqrt(err / num_elements));
+
+  // cleanup memory
+
+  free(h_data);
+  free(reference);
+  checkCudaErrors(cudaFree(d_idata));
+  checkCudaErrors(cudaFree(d_odata));
+
+  // CUDA exit -- needed to flush printf write buffer
+
+  cudaDeviceReset();
+}
+```
+{{< /admonition >}}
+
+需要特别注意的一点是，如果数组长度很大，则`float`会丢失精度，此时需要使用`double`。
+
+测试了一下两个方法的效率，对一亿（$10^8$）个`double`求前缀和，每个block开1024个线程，`scan2`用时`500ms`左右，`scan3`用时`360ms`左右，效率提升了$30\%$。
+
+{{< admonition type=quote title="Step 4" open=true >}}
+Following the mathematical description in lecture 4, modify the scan routine to handle recurrence equations, given input data $s_n$, $u_n$.
+{{< /admonition >}}

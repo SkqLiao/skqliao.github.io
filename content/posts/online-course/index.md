@@ -134,7 +134,7 @@ lightgallery: true
 - [x] Practical 4: reduction (2023/10/16)
 - [x] Practical 5: using the CUBLAS and CUFFT libraries (2023/10/16)
 - [x] Practical 6: revisiting the simple "hello world" example (2023/10/16)
-- [ ] Practical 7: tri-diagonal equations
+- [x] Practical 7: tri-diagonal equations (2023/10/19)
 - [ ] Practical 8: scan operation and recurrence equations
 - [ ] Practical 9: pattern matching
 - [ ] Practical 10: auto-tuning
