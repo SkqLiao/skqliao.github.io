@@ -3859,3 +3859,363 @@ int main(int argc, const char **argv) {
 {{< admonition type=quote title="Step 4" open=true >}}
 Following the mathematical description in lecture 4, modify the scan routine to handle recurrence equations, given input data $s_n$, $u_n$.
 {{< /admonition >}}
+
+并行的方法仍然是倍增。
+
+$v[n]=s[n]\times v[n-1]+u[n], v[n-1]=s[n-1]\times v[n-2]+u[n-1]$，将后式代入前式后得到 $v[n]=(s[n]s[n-1])v[n-2]+(s[n]u[n-1]+u[n])$。
+
+令 $s'[n]=s[n]\times s[n-1],u'[n]=s[n]\times u[n-1]+u[n]$，则 $v[n]=s'[n]\times v[n-2]+u'[n]$，那么就继续可以带入 $v[n-2]=s'[n-2]\times v[n-4]+u'[n-2]$。
+
+因此也就得到了更新方法：$v^{(p)}[n]=s^{(p)}[n]\times v[n-2^p]+u^{(p)}[n]$，$s^{(p)}[n]=s^{(p-1)}[n]\times s^{(p-1)}[n-2^p]$ 和 $u^{(p)}[n]=s^{(p-1)}[n]\times u^{(p-1)}[n-2^p]+u^{(p-1)}[n]$。
+
+块之间串行计算，上一个块计算完后，将最后一位的值传给下一个块，下一个块继续计算。
+
+{{< admonition type=info title="scan4.cu" open=false >}}
+```c
+#include <float.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include <csignal>
+
+#include "helper_cuda.h"
+
+///////////////////////////////////////////////////////////////////////////////
+// CPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+void scan_gold(double *odata, double *isdata, double *iudata,
+               const unsigned int len) {
+  odata[0] = iudata[0];
+  for (int i = 1; i < len; i++) odata[i] = isdata[i] * odata[i - 1] + iudata[i];
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// GPU routine
+///////////////////////////////////////////////////////////////////////////////
+
+__device__ volatile int current_block = 0;
+__device__ double current_v = 0;
+
+__global__ void scan(int N, double *g_odata, double *g_isdata,
+                     double *g_iudata) {
+  // Dynamically allocated shared memory for scan kernels
+
+  extern __shared__ double tmp[];
+  double *s = tmp;
+  double *u = tmp + blockDim.x;
+  double *v = tmp + blockDim.x * 2;
+
+  int tid = threadIdx.x;
+  int rid = blockIdx.x * blockDim.x + threadIdx.x;
+  if (rid >= N) return;
+
+  s[tid] = g_isdata[rid];
+  u[tid] = g_iudata[rid];
+  do {
+  } while (current_block < blockIdx.x);
+  if (tid == 0) v[tid] = u[tid] + s[tid] * current_v;
+
+  // read input into shared memory
+  for (int nt = 1; nt < blockDim.x; nt *= 2) {
+    __syncthreads();
+    if (tid >= nt) {
+      v[tid] = s[tid] * v[tid - nt] + u[tid];
+      u[tid] = s[tid] * u[tid - nt] + u[tid];
+      s[tid] = s[tid - nt] * s[tid];
+    }
+  }
+  g_odata[rid] = v[tid];
+  __syncthreads();
+  if (tid == blockDim.x - 1) {
+    printf("block %d, v = %f\n", blockIdx.x, v[tid]);
+    current_v = v[tid];
+    current_block++;
+  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Program main
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, const char **argv) {
+  int num_elements, num_threads, num_blocks, mem_size, shared_mem_size;
+
+  double *h_sdata, *h_udata, *reference;
+  double *d_isdata, *d_iudata, *d_odata;
+
+  // initialise card
+
+  findCudaDevice(argc, argv);
+
+  num_elements = 100;
+  num_threads = 20;
+  num_blocks = (num_elements + num_threads - 1) / num_threads;
+  mem_size = sizeof(double) * num_elements;
+
+  // allocate host memory to store the input data
+  // and initialize to integer values between 0 and 1000
+
+  h_sdata = (double *)malloc(mem_size);
+  h_udata = (double *)malloc(mem_size);
+
+  for (int i = 0; i < num_elements; i++) {
+    h_sdata[i] = 2 * (rand() / (double)RAND_MAX);
+    h_udata[i] = 2 * (rand() / (double)RAND_MAX);
+  }
+
+  // compute reference solution
+
+  reference = (double *)malloc(mem_size);
+  scan_gold(reference, h_sdata, h_udata, num_elements);
+
+  // allocate device memory input and output arrays
+
+  checkCudaErrors(cudaMalloc((void **)&d_isdata, mem_size));
+  checkCudaErrors(cudaMalloc((void **)&d_iudata, mem_size));
+  checkCudaErrors(cudaMalloc((void **)&d_odata, mem_size));
+
+  // copy host memory to device input array
+
+  checkCudaErrors(
+      cudaMemcpy(d_isdata, h_sdata, mem_size, cudaMemcpyHostToDevice));
+
+  checkCudaErrors(
+      cudaMemcpy(d_iudata, h_udata, mem_size, cudaMemcpyHostToDevice));
+
+  // execute the kernel
+
+  shared_mem_size = sizeof(double) * num_threads * 3;
+
+  scan<<<num_blocks, num_threads, shared_mem_size>>>(num_elements, d_odata,
+                                                     d_isdata, d_iudata);
+
+  getLastCudaError("scan kernel execution failed");
+
+  // copy result from device to host
+
+  checkCudaErrors(
+      cudaMemcpy(h_sdata, d_odata, mem_size, cudaMemcpyDeviceToHost));
+
+  // check results
+
+  double err = 0.0;
+  for (int i = 0; i < num_elements; i++) {
+    err += (h_sdata[i] - reference[i]) * (h_sdata[i] - reference[i]);
+    // printf("%d %f %f \n", i, h_sdata[i], reference[i]);
+  }
+  printf("rms scan error  = %f\n", sqrt(err / num_elements));
+
+  // cleanup memory
+
+  free(h_sdata);
+  free(h_udata);
+  free(reference);
+  checkCudaErrors(cudaFree(d_iudata));
+  checkCudaErrors(cudaFree(d_isdata));
+  checkCudaErrors(cudaFree(d_odata));
+
+  // CUDA exit -- needed to flush printf write buffer
+
+  cudaDeviceReset();
+}
+```
+{{< /admonition >}}
+
+与CPU版代码比较结果，正确性没有问题。
+
+数组长度和初始值设置得较小的原因是，表达式中涉及乘法，值的增长速度很快，很容易超出精度范围。
+
+{{< admonition type=quote title="Step 6" open=true >}}
+If you have time and interest, you could read about {{< link "https://stackoverflow.com/questions/26206544/parallel-radix-sort-how-would-this-implementation-actually-work-are-there-some/26229897#26229897" "parallel radix sort" >}} (which needs a prefix-scan) and perhaps implement it.
+
+Suggestion: do 1 bit at a time to simplify the programming. For better performance, I would probably do 4 bits at a time, which requires $2^4 − 1 = 15$ scans to be performed at each stage. Discuss with me if you would like to understand this better.
+{{< /admonition >}}
+
+先从参考链接中的代码开始理解，这是一个warp-level的radix-sort，利用warp中的`__ballot_sync`和`__popc`来快速实现前缀和。
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#define WSIZE 32
+#define LOOPS 100000
+#define UPPER_BIT 31
+#define LOWER_BIT 0
+
+__device__ unsigned int ddata[WSIZE];
+
+// naive warp-level bitwise radix sort
+
+__global__ void mykernel() {
+  __shared__ volatile unsigned int sdata[WSIZE * 2];
+  // load from global into shared variable
+  sdata[threadIdx.x] = ddata[threadIdx.x];
+  unsigned int bitmask = 1 << LOWER_BIT;
+  unsigned int offset = 0;
+  unsigned int thrmask = 0xFFFFFFFFU << threadIdx.x;
+  unsigned int mypos;
+  //  for each LSB to MSB
+  for (int i = LOWER_BIT; i <= UPPER_BIT; i++) {
+    unsigned int mydata = sdata[((WSIZE - 1) - threadIdx.x) + offset];
+    unsigned int mybit = mydata & bitmask;
+    // get population of ones and zeroes (cc 2.0 ballot)
+    unsigned int ones = __ballot_sync(0xFFFFFFFFU, mybit);  // cc 2.0
+    unsigned int zeroes = ~ones;
+    offset ^= WSIZE;  // switch ping-pong buffers
+    // do zeroes, then ones
+    if (!mybit)  // threads with a zero bit
+      // get my position in ping-pong buffer
+      mypos = __popc(zeroes & thrmask);
+    else  // threads with a one bit
+      // get my position in ping-pong buffer
+      mypos = __popc(zeroes) + __popc(ones & thrmask);
+    // move to buffer  (or use shfl for cc 3.0)
+    sdata[mypos - 1 + offset] = mydata;
+    // repeat for next bit
+    bitmask <<= 1;
+  }
+  // save results to global
+  ddata[threadIdx.x] = sdata[threadIdx.x + offset];
+}
+
+```
+
+并行基数排序的思路与串行类似，先按照最低位排序，然后按照次低位排序，直到最高位。
+
+**并行**体现在如何确定每个元素在这一轮排序后的新位置。
+
+假设这个数当前位是 $0$，那么在这一轮排序后，它的新位置应该是**前缀**中这一位是 $0$ 的数的个数；如果为 $1$，则是这一位是 $0$ 的数的总个数+**前缀**中这一位是 $1$ 的数的个数。
+
+而这个求前缀和的过程，就是前面实现的`scan`。
+
+在上面warp-level的代码中，它使用`__ballot_sync`来获得整个warp中每个数当前位的值（$0/1$），然后使用`__popc`来获得前缀中这一位是 $0/1$ 的数的个数。
+
+接下来实现**一个block**的版本，相比与warp版本，区别在于需要手动实现求前缀和（见`scan`函数，其实是本节此前实现过的函数）。
+
+{{< admonition type=info title="scan5.cu" open=false >}}
+```c
+#include <cuda_runtime.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+void cpu_radix_sort(int* idata, int* odata, int n) {
+  int* h_one = (int*)malloc(sizeof(int) * n);
+  for (int i = 0; i < n; ++i) {
+    odata[i] = idata[i];
+  }
+  for (int i = 0; i < 10; ++i) {
+    int zero = 0, one = 0;
+    for (int j = 0; j < n; ++j) {
+      int bit = (odata[j] >> i) & 1;
+      if (!bit) {
+        odata[zero++] = odata[j];
+      } else {
+        h_one[one++] = odata[j];
+      }
+    }
+    for (int j = 0; j < one; ++j) {
+      odata[zero++] = h_one[j];
+    }
+  }
+  free(h_one);
+}
+
+__device__ void scan(int* suf, int tid) {
+  __syncthreads();
+  int temp = suf[tid];
+  for (int d = 1; d < blockDim.x; d = 2 * d) {
+    __syncthreads();
+    if (tid - d >= 0) temp = temp + suf[tid - d];
+    __syncthreads();
+    suf[tid] = temp;
+  }
+}
+
+__global__ void gpu_radix_sort(int* data, int n) {
+  int tid = threadIdx.x;
+  extern __shared__ int tmp[];
+  int* suf_zero = tmp;
+  int* suf_one = tmp + n;
+  for (int i = 0; i < 10; ++i) {
+    __syncthreads();
+    int mybit = (data[tid] >> i) & 1;
+    if (!mybit) {
+      suf_zero[tid] = 1;
+      suf_one[tid] = 0;
+    } else {
+      suf_zero[tid] = 0;
+      suf_one[tid] = 1;
+    }
+    scan(suf_zero, tid);
+    __syncthreads();
+    scan(suf_one, tid);
+    __syncthreads();
+    int zero_num = suf_zero[n - 1];
+    if (!mybit) {
+      data[suf_zero[tid] - 1] = data[tid];
+    } else {
+      data[zero_num + suf_one[tid] - 1] = data[tid];
+    }
+  }
+}
+
+int main() {
+  int num_elements = 30;
+  int *h_idata, *h_odata;
+  int* d_data;
+
+  h_idata = (int*)malloc(sizeof(int) * num_elements);
+  h_odata = (int*)malloc(sizeof(int) * num_elements);
+
+  for (int i = 0; i < num_elements; i++) {
+    h_idata[i] = rand() % 1024;
+  }
+  cpu_radix_sort(h_idata, h_odata, num_elements);
+
+  cudaMalloc((void**)&d_data, sizeof(int) * num_elements);
+  cudaMemcpy(d_data, h_idata, sizeof(int) * num_elements,
+             cudaMemcpyHostToDevice);
+
+  cudaMemcpy(h_idata, d_data, sizeof(int) * num_elements,
+             cudaMemcpyDeviceToHost);
+
+  int shared_mem_size = sizeof(int) * num_elements * 2;
+
+  gpu_radix_sort<<<1, num_elements, shared_mem_size>>>(d_data, num_elements);
+
+  cudaMemcpy(h_idata, d_data, sizeof(int) * num_elements,
+             cudaMemcpyDeviceToHost);
+
+  for (int i = 0; i < num_elements; i++) {
+    if (h_idata[i] != h_odata[i]) {
+      printf("Error!\n");
+      break;
+    }
+    printf("%d ", h_idata[i]);
+  }
+
+  cudaFree(d_data);
+
+  return 0;
+}
+```
+{{< /admonition >}}
+
+多个block相比与一个block的区别在于多了一步**合并**，即有若干个有序的数组，需要合并成一个有序的数组。
+
+DEBUG懵逼了，坑代填。
+
+## Practical 9: pattern-matching
+
+{{< admonition type=tips title="运行环境" open=false >}}
+本次实践的运行环境为：
+- GPU：RTX 4070(12GB)
+- CPU：Intel(R) Core(TM) i5-13600KF CPU @ 3.40GHz
+{{< /admonition >}}
+
+{{< admonition type=quote title="摘要" open=true >}}
+受计算金融中使用蒙特卡洛方法进行期权定价的启发，我们根据独立的 "路径 "模拟，计算了 "报酬 "函数的平均值。函数的平均值。这个函数是一个随机变量，它的期望值是我们想要计算的量。具体原理见{{<link href="https://people.maths.ox.ac.uk/gilesm/cuda/prac2/MC_notes.pdf" content="some mathematical notes">}}
+{{< /admonition >}}
+

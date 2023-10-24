@@ -30,6 +30,7 @@ lightgallery: true
 - **标签**：函数式编程
 - **语言**：Haskell
 - **评价**：Haskell 是我接触到的第一门函数式编程语言，相比于 C++等指令式语言有很大差别，整体感觉很有意思，难度也是循序渐进。
+- **状态**：已完成
 
 ## MIT 6.S081: Operation System Enginnering (2021 Fall)
 
@@ -95,6 +96,7 @@ lightgallery: true
 - **标签**：机器学习
 - **语言**：
 - **评价**：
+- **状态**：学习中
 
 ## Oxford: Course on CUDA Programming on NVIDIA GPUs, 2023
 
@@ -109,6 +111,7 @@ lightgallery: true
 - **标签**：并行计算
 - **语言**：CUDA
 - **评价**：
+- **状态**：学习中
 
 {{< admonition type=abstract title="课程大纲" open=false >}}
 
@@ -142,6 +145,64 @@ lightgallery: true
 - [ ] Practical 12: more on streams and overlapping computation and communication
 
 {{< /admonition >}}
+
+## Caltech CS 179: GPU Programming
+
+- **主页**：{{< link "http://courses.cms.caltech.edu/cs179/" >}}
+- **内容**：
+- **形式**：
+  - [ ] 视频
+  - [x] 文档
+  - [x] 作业
+- **难度**：
+- **标签**：并行计算
+- **语言**：CUDA
+- **评价**：
+
+{{< admonition type=abstract title="课程大纲" open=false >}}
+
+- Week 1 Introduction
+  - [x] Lecture 1: Introduction (2023/10/24)
+  - [x] Lecture 2: Intro to the SIMD lifestyle and GPU internals (2023/10/24)
+  - [x] Lecture 3: Recitation 1 (2023/10/24)
+
+- Week 2 Shared Memory
+  - [ ] Lecture 4
+  - [ ] Lecture 5
+  - [ ] Lecture 6
+
+- Week 3 Reductions, FFT
+  - [ ] Lecture 7
+  - [ ] Lecture 8
+  - [ ] Lecture 9
+
+- Week 4 cuBLAS and Graphics
+  - [ ] Lecture 10
+  - [ ] Lecture 11
+  - [ ] Lecture 12
+
+- Week 5 Machine Learning and cuDNN I
+  - [ ] Lecture 13
+  - [ ] Lecture 14
+  - [ ] Lecture 15
+
+- Week 6 Machine Learning and cuDNN II
+  - [ ] Lecture 16
+  - [ ] Lecture 17
+  - [ ] Lecture 18
+
+{{< /admonition >}}
+
+{{< admonition type=info title="作业" open=false >}}
+
+- [ ] Lab 1: Introduction to CUDA
+- [ ] Lab 2:
+- [ ] Lab 3:
+- [ ] Lab 4:
+- [ ] Lab 5:
+- [ ] Lab 6:
+{{< /admonition >}}
+
 ## MIT 6.854/18.415J: Advanced Algorithms (Fall 2021)
 
 - **主页**：{{< link "https://6.5210.csail.mit.edu" >}}
