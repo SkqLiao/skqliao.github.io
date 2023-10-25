@@ -167,7 +167,7 @@ lightgallery: true
   - [x] Lecture 3: Recitation 1 (2023/10/24)
 
 - Week 2 Shared Memory
-  - [ ] Lecture 4
+  - [ ] Lecture 4: 
   - [ ] Lecture 5
   - [ ] Lecture 6
 
@@ -195,7 +195,7 @@ lightgallery: true
 
 {{< admonition type=info title="作业" open=false >}}
 
-- [ ] Lab 1: Introduction to CUDA
+- [x] Lab 1: Introduction to CUDA (2023/10/25)
 - [ ] Lab 2:
 - [ ] Lab 3:
 - [ ] Lab 4:
