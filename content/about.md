@@ -85,7 +85,7 @@ math:
 
 不会吧不会吧，难道一年不训练还能拿奖？
 
-- **CCPC 2024**：{{< link "https://board.xcpcio.com/ccpc/9th/harbin" 哈尔滨站 "Visit XCPC Board!" >}}
+- **CCPC 2024**：{{< link "https://board.xcpcio.com/ccpc/9th/harbin" 哈尔滨站 "Visit XCPC Board!" >}} 银牌
 - **蓝桥杯 2024 (Java?)组**
 - **天梯赛 2024**
 

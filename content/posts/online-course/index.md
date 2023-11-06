@@ -53,7 +53,7 @@ lightgallery: true
   - [x] 视频：{{< link href="https://space.bilibili.com/1567748478/channel/seriesdetail?sid=358497" content="bilibili" >}}
   - [x] 文档
   - [ ] 作业
-- **难度**：内容很多，但感觉难度不大（因为没有 lab）
+- **难度**：内容很多，但因为没有lab，所以不存在代码实现的难度
 - **标签**：深度学习
 - **语言**：Python(PyTorch)
 - **评价**：收获很大，但对我来说更多的是科普性质的（了解大致原理），没怎么上手写代码。此外，李沐老师每次讲课后还会回答网友的很多问题，这很难得。
@@ -97,6 +97,44 @@ lightgallery: true
 - **语言**：
 - **评价**：
 - **状态**：学习中
+
+{{< admonition type=abstract title="课程大纲" open=false >}}
+- [ ] Lecture 1: Introduction of Deep Learning
+- [ ] Lecture 2: What to do if my network fails to train
+- [ ] Lecture 3: Image as input
+- [ ] Lecture 4: Sequence as input
+- [ ] Lecture 5: Sequence to sequence
+- [ ] Lecture 6: GenerationRecent Advance of Self-supervised learning for NLP期中考週不上課
+- [ ] Lecture 7: Self-supervised learning for Speech and Image
+- [ ] Lecture 8: Auto-encoder/ Anomaly Detection
+- [ ] Lecture 9: Explainable AI
+- [ ] Lecture 10: Attack
+- [ ] Lecture 11: Adaptation
+- [ ] Lecture 12: Reinforcement Learning
+- [ ] Lecture 13: Network Compression
+- [ ] Lecture 14: Life-long Learning 
+- [ ] Lecture 15: Meta Learning
+{{< /admonition >}}
+
+{{< admonition type=info title="作业" open=false >}}
+
+- [ ] hw1: Regression
+- [ ] hw2: Classification
+- [ ] hw3: CNN
+- [ ] hw4: Self-attention
+- [ ] hw5: Transformer
+- [ ] hw6: GAN
+- [ ] hw7: BERT
+- [ ] hw8: Autoencoder
+- [ ] hw9: Explainable AI
+- [ ] hw10: Attack
+- [ ] hw11: Adaptation
+- [ ] hw12: RL
+- [ ] hw13: Compression
+- [ ] hw14: Life-long
+- [ ] hw15: Meta Learning
+
+{{< /admonition >}}
 
 ## Oxford: Course on CUDA Programming on NVIDIA GPUs, 2023
 
@@ -158,6 +196,7 @@ lightgallery: true
 - **标签**：并行计算
 - **语言**：CUDA
 - **评价**：
+- **状态**：学习中
 
 {{< admonition type=abstract title="课程大纲" open=false >}}
 
@@ -167,14 +206,14 @@ lightgallery: true
   - [x] Lecture 3: Recitation 1 (2023/10/24)
 
 - Week 2 Shared Memory
-  - [ ] Lecture 4: 
-  - [ ] Lecture 5
-  - [ ] Lecture 6
+  - [x] Lecture 4: GPU Memory Systems (2023/10/25)
+  - [x] Lecture 5: Synchronization and ILP (2023/10/26)
+  - [x] Lecture 6: Recitation 2 (2023/10/26)
 
 - Week 3 Reductions, FFT
-  - [ ] Lecture 7
-  - [ ] Lecture 8
-  - [ ] Lecture 9
+  - [x] Lecture 7: "Reductions for GPUs" (2023/10/27)
+  - [x] Lecture 8: "cuFFT" (2023/10/27)
+  - [x] Lecture 9: "Recitation 3" (2023/10/27)
 
 - Week 4 cuBLAS and Graphics
   - [ ] Lecture 10
