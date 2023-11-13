@@ -65,7 +65,7 @@ $$
 o_k(x)=D[(b(x)*s(\hat{\mathbf{h}}_k(x))) +n_k(x)
 $$
 
-在上式[^1]中，$b(x)$ 为卷积核，即PSF，$s(\hat{\mathbf{h}}_k(x))$ 为原始图像，$n_k(x)$ 为噪声，$D$ 为下采样(downsampling)操作。
+在上式中，$b(x)$ 为卷积核，即PSF，$s(\hat{\mathbf{h}}_k(x))$ 为原始图像，$n_k(x)$ 为噪声，$D$ 为下采样(downsampling)操作。
 
 因此所谓的解卷积（deconvolution）就是通过实际图像还原回原始图像。
 
