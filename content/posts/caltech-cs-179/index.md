@@ -1,5 +1,5 @@
 ---
-title: "Caltech CS 179 GPU Programming 学习笔记"
+title: "Caltech CS179 GPU Programming 学习笔记"
 date: 2023-10-27T17:47:20+08:00
 draft: false
 tags: ["CUDA"]
