@@ -84,7 +84,7 @@ lightgallery: true
 - **语言**：
 - **评价**：
 
-## 國立臺灣大學 Machine Learning (2022 Spring)
+## NTU EE5184 Machine Learning (2022 Spring)
 
 - **主页**：{{< link "https://speech.ee.ntu.edu.tw/~hylee/ml/2022-spring.php" >}}
 - **内容**：
@@ -99,10 +99,10 @@ lightgallery: true
 - **状态**：学习中
 
 {{< admonition type=abstract title="课程大纲" open=false >}}
-- [ ] Lecture 1: Introduction of Deep Learning
-- [ ] Lecture 2: What to do if my network fails to train
-- [ ] Lecture 3: Image as input
-- [ ] Lecture 4: Sequence as input
+- [x] Lecture 1: Introduction of Deep Learning
+- [x] Lecture 2: What to do if my network fails to train
+- [x] Lecture 3: Image as input
+- [x] Lecture 4: Sequence as input
 - [ ] Lecture 5: Sequence to sequence
 - [ ] Lecture 6: GenerationRecent Advance of Self-supervised learning for NLP期中考週不上課
 - [ ] Lecture 7: Self-supervised learning for Speech and Image
@@ -118,9 +118,9 @@ lightgallery: true
 
 {{< admonition type=info title="作业" open=false >}}
 
-- [ ] hw1: Regression
-- [ ] hw2: Classification
-- [ ] hw3: CNN
+- [x] hw1: Regression
+- [x] hw2: Classification
+- [x] hw3: CNN (2023/12/04)
 - [ ] hw4: Self-attention
 - [ ] hw5: Transformer
 - [ ] hw6: GAN
