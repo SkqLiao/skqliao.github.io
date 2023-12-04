@@ -420,6 +420,7 @@ This notebook uses code written by Heng-Jui Chang @ NTUEE (https://github.com/ga
 ```
 {{</admonition>}}
 
+
 ## HW2 Classification: LibriSpeech phoneme classification
 
 根据语音数据预测音素。其中从原始音频中分解出MFCC特征的预处理已经由TA完成，我们只需要设计网络结构并训练即可。
@@ -839,6 +840,236 @@ with open('prediction.csv', 'w') as f:
     f.write('Id,Class\n')
     for i, y in enumerate(pred):
         f.write('{},{}\n'.format(i, y))
+```
+{{</admonition>}}
+
+## HW3 CNN: Food Classification
+
+根据图片预测食物的种类。
+
+感觉意义不大，索性懒得折腾了，直接用的预训练模型`resnet50(weights=ResNet50_Weights.IMAGENET1K_V2)`。
+
+训练中遇到了诡异的问题，运行`.ipynb`（助教提供的代码）时，CUDA直接报错，但是将代码原封不动转成`.py`后，运行就毫无问题。
+
+参考代码：
+
+{{<admonition info "ml2022spring_hw3.py" false>}}
+```python
+import pandas as pd
+import torch
+import os
+from torch.utils.data import Dataset
+from torch.utils.data import DataLoader
+from torchvision import models
+from torchvision.transforms import v2
+import torch.nn as nn
+from PIL import Image
+from tqdm import tqdm
+import numpy as np
+
+seed = 0
+batch_size = 64
+learning_rate = 0.001
+num_epoch = 10
+seed = 0
+num_classes = 11
+early_stopping = 8
+model_path = 'model.ckpt'
+
+
+class LibriDataset(Dataset):
+    def __init__(self, path, X, y=None, transform=None):
+        self.files = X
+        self.path = path
+        self.transform = transform
+        if y is not None:
+            self.label = y
+        else:
+            self.label = None
+
+    def __getitem__(self, idx):
+        data = Image.open(os.path.join(self.path, self.files[idx]))
+        if self.label is not None:
+            return self.files[idx], self.transform(data), self.label[idx]
+        else:
+            return self.files[idx], self.transform(data)
+
+    def __len__(self):
+        return len(self.files)
+
+
+def load_data(path, mode, transform=None):
+    X, y = [], []
+    for file in os.listdir(path):
+        if file.endswith('.jpg'):
+            X.append(file)
+            if mode in ['train', 'val']:
+                y.append(int(file.split('_')[0]))
+
+    if mode in ['train', 'val']:
+        return LibriDataset(path, X, y, transform=transform)
+    else:
+        return LibriDataset(path, X, transform=transform2)
+
+
+def same_seeds(seed):
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)
+    np.random.seed(seed)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+
+
+same_seeds(seed)
+
+transform = v2.Compose([
+    v2.ToImage(),
+    v2.Resize((512, 512), antialias=True),
+    v2.RandomHorizontalFlip(),
+    v2.RandomVerticalFlip(),
+    v2.RandomRotation(15),
+    v2.RandomPerspective(),
+    v2.ToDtype(torch.float32, scale=True),
+    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+transform2 = v2.Compose([
+    v2.ToImage(),
+    v2.Resize((512, 512), antialias=True),
+    v2.ToDtype(torch.float32, scale=True),
+    v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+])
+
+train_set = load_data('./food11/training/', mode='train', transform=transform)
+val_set = load_data('./food11/validation/', mode='val', transform=transform)
+test_set = load_data('./food11/test/', mode='test', transform=transform)
+
+print('train dataset: {} images'.format(len(train_set)))
+print('val dataset: {} images'.format(len(val_set)))
+print('test dataset: {} images'.format(len(test_set)))
+
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print('device:', device)
+
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
+
+model = models.resnet50(
+    weights=models.ResNet50_Weights.IMAGENET1K_V2).to(device)
+num_features = model.fc.in_features
+model.fc = nn.Linear(num_features, num_classes).to(device)
+
+criterion = torch.nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingWarmRestarts(
+    optimizer, T_0=8, T_mult=2, eta_min=learning_rate / 10)
+
+best_acc = 0.0
+for epoch in range(num_epoch):
+    train_acc = 0.0
+    train_loss = 0.0
+    val_acc = 0.0
+    val_loss = 0.0
+    train_item = 0
+
+    # training
+    model.train()  # set the model to training mode
+    pbar = tqdm(train_loader, ncols=110)
+    pbar.set_description(f'T: {epoch+1}/{num_epoch}')
+    for i, batch in enumerate(pbar):
+        _, features, labels = batch
+        features = features.to(device)
+        labels = labels.to(device)
+
+        optimizer.zero_grad()
+        outputs = model(features)
+
+        loss = criterion(outputs, labels)
+        loss.backward()
+        optimizer.step()
+
+        # get the index of the class with the highest probability
+        _, train_pred = torch.max(outputs, 1)
+        train_acc += (train_pred.detach() == labels.detach()).sum().item()
+        train_loss += loss.item()
+        train_item += labels.size(0)
+        lr = optimizer.param_groups[0]["lr"]
+        pbar.set_postfix(
+            {'lr': lr, 'loss': train_loss/train_item})
+    scheduler.step()
+    pbar.close()
+    # validation
+    if len(val_set) > 0:
+        model.eval()  # set the model to evaluation mode
+        with torch.no_grad():
+            pbar = tqdm(val_loader, ncols=110)
+            pbar.set_description(f'V: {epoch+1}/{num_epoch}')
+            samples = 0
+            for i, batch in enumerate(pbar):
+                _, features, labels = batch
+                features = features.to(device)
+                labels = labels.to(device)
+                outputs = model(features)
+
+                loss = criterion(outputs, labels)
+
+                _, val_pred = torch.max(outputs, 1)
+                # get the index of the class with the highest probability
+                val_acc += (val_pred.cpu() == labels.cpu()).sum().item()
+                val_loss += loss.item()
+                samples += labels.size(0)
+                pbar.set_postfix({'val acc': val_acc/samples})
+            pbar.close()
+
+            print('[{:03d}/{:03d}] Train Acc: {:3.6f} Loss: {:3.6f} | Val Acc: {:3.6f} loss: {:3.6f}'.format(
+                epoch + 1, num_epoch, train_acc/len(train_set), train_loss/len(
+                    train_loader), val_acc/len(val_set), val_loss/len(val_loader)
+            ))
+
+            # if the model improves, save a checkpoint at this epoch
+            if val_acc > best_acc:
+                best_acc = val_acc
+                torch.save(model.state_dict(), model_path)
+                print('saving model with acc {:.3f}'.format(
+                    best_acc/(len(val_set))))
+                early_stop_count = 0
+            else:
+                early_stop_count += 1
+                if early_stop_count >= early_stopping:
+                    print(
+                        f"Epoch: {epoch + 1}, model not improving, early stopping.")
+                    break
+    else:
+        print('[{:03d}/{:03d}] Train Acc: {:3.6f} Loss: {:3.6f}'.format(epoch + 1,
+              num_epoch, train_acc / len(train_set), train_loss/len(train_loader)))
+
+    # if not validating, save the last epoch
+if len(val_set) == 0:
+    torch.save(model.state_dict(), model_path)
+    print('saving model at last epoch')
+
+test_acc = 0.0
+test_lengths = 0
+result = []
+
+model.eval()
+with torch.no_grad():
+    for i, batch in enumerate(tqdm(test_loader)):
+        filename, features = batch
+        features = features.to(device)
+        outputs = model(features)
+
+        # get the index of the class with the highest probability
+        _, test_pred = torch.max(outputs, 1)
+        # result = [(filename, pred_label)]
+        result.extend(zip(filename, test_pred.cpu().numpy()))
+
+with open('result.txt', 'w') as f:
+    for filename, pred_label in result:
+        f.write('{}\t{}\n'.format(filename, pred_label))
 ```
 {{</admonition>}}
 
